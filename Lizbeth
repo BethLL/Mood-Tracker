@@ -1,0 +1,54 @@
+from datetime import date
+
+class MoodEntry:
+    def __init__(self, mood_score, date, sub_mood=None):
+        self.mood_score = mood_score
+        self.date = date
+        self.sub_mood = sub_mood
+
+    def get_mood_type(self):
+        mood_types = {
+            1: {'name': 'Happy', 'sub_moods': ['Playful', 'Content', 'Proud', 'Optimistic', 'Excited','Interested','Accepted','Powerful','Peaceful','Trusting']},
+            2: {'name': 'Sad', 'sub_moods': ['Lonely', 'Vulnerable','Despair','Guilty','Depressed','Hurt','Disappointed', 'Hopeless', 'Grief']},
+            3: {'name': 'Surprised', 'sub_moods': ['Amazed', 'Confused', 'Stunned', 'Shocked','Startled','Excited']},
+            4: {'name': 'Bad', 'sub_moods': ['Tired', 'Stressed', 'Bored', 'Sick','Busy']},
+            5: {'name': 'Fearful', 'sub_moods': ['Scared', 'Anxious', 'Insecure', 'Nervous','Weak','Rejected','Threatened']},
+            6: {'name': 'Angry', 'sub_moods': ['Let Down','Humiliated','Bitter','Mad','Agressive','Frustrated','Distant','Critical', 'Annoyed', 'Rage']},
+            7: {'name': 'Disgusted', 'sub_moods': ['Disapproving', 'Disappointed', 'Awful', 'Repelled','Judgmental','Embarrassed','Nauseated','Hesitant','Horrified']}
+        }
+
+        while True:
+            print('How do you feel today?')
+            for key, value in mood_types.items():
+                print(f"{key}. {value['name']}")
+            
+            try:
+                mood = int(input('Enter the number corresponding to your mood: '))
+                if mood in mood_types:
+                    self.mood_score = mood
+                    main_mood = mood_types[mood]['name']
+                    sub_mood = self.get_sub_mood(mood_types[mood]['sub_moods'])
+                    self.sub_mood = sub_mood
+                    return main_mood, sub_mood
+                else:
+                    print('Invalid entry. Please choose a valid number between 1 and 7.')
+            except ValueError:
+                print('Invalid input. Please enter a number.')
+
+    def get_sub_mood(self, sub_moods):
+        while True:
+            print(f"\nLet's narrow it:")
+            for i, sub_mood in enumerate(sub_moods, 1):
+                print(f'{i}. {sub_mood}')
+            
+            try:
+                choice = int(input('Enter the number of your specific mood: '))
+                if 1 <= choice <= len(sub_moods):
+                    return sub_moods[choice - 1]
+                else:
+                    print(f"Invalid entry. Please choose a number between 1 and {len(sub_moods)}.")
+            except ValueError:
+                print('Invalid input. Please enter a number.')
+
+    def __str__(self):
+        return f"I am feeling {self.sub_mood} today, {self.date}"
