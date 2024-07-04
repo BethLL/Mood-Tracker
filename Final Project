@@ -1,4 +1,6 @@
 from datetime import date
+import json
+
 
 class MoodEntry:
     def __init__(self, mood_score, date, sub_mood=None):
@@ -36,6 +38,7 @@ class MoodEntry:
                 print('Invalid input. Please enter a number.')
 
     def get_sub_mood(self, sub_moods):
+        
         while True:
             print(f"\nLet's narrow it:")
             for i, sub_mood in enumerate(sub_moods, 1):
@@ -52,3 +55,59 @@ class MoodEntry:
 
     def __str__(self):
         return f"I am feeling {self.sub_mood} today, {self.date}"
+   
+    def to_dict(self):
+        return {
+            'mood_score': self.mood_score,
+            'date': self.date.isoformat(),
+            'sub_mood': self.sub_mood
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+      return cls(data['mood_score'], date.fromisoformat(data['date']), data.get('sub_mood'))
+
+
+class MoodTracker:
+    def __init__(self):
+        self.entries = []
+
+    def add_entry(self, entry):
+        self.entries.append(entry)
+
+    def save_to_file(self, filename='mood_entries.json'):
+        with open(filename, 'w') as f:
+            json.dump([entry.to_dict() for entry in self.entries], f)
+
+    def load_from_file(self, filename='mood_entries.json'):
+        try:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+                self.entries = [MoodEntry.from_dict(entry) for entry in data]
+        except json.JSONDecodeError: 
+            print('Starting tracking')
+
+    def get_chart_data(self):
+        return [(entry.date, entry.mood_score) for entry in self.entries]
+
+
+
+    tracker = MoodTracker()
+    tracker.load_from_file() 
+
+    while True:
+        today = date.today()
+        mood_entry = MoodEntry(0, today)
+        main_mood, sub_mood = mood_entry.get_mood_type()
+        print(mood_entry)
+
+        tracker.add_entry(mood_entry)
+        tracker.save_to_file()
+
+        choice = input('Do you feel another emotion? (y/n): ')
+        if choice.lower() != 'y':
+            break
+
+ 
+    chart_data = tracker.get_chart_data()
+    print('Data for charting:', chart_data)
