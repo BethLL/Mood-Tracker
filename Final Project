@@ -1,8 +1,11 @@
 from datetime import date
 import json
+from matplotlib.dates import DateFormatter
+import matplotlib.dates as mdates
 import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 class MoodEntry:
@@ -156,3 +159,63 @@ class MoodTracker:
         exercise_times = [entry.exercise_time for entry in self.entries]
         sleep_times = [entry.sleep_time for entry in self.entries]
         return dates, mood_scores, water_intakes, exercise_times, sleep_times
+
+if __name__ == '__main__':
+    #app = MoodTrackerApp()
+    #app.mainloop()
+
+  tracker = MoodTracker()
+  tracker.load_from_file()
+
+while True:
+    today = date.today()
+    mood_entry = MoodEntry(0, today)
+    main_mood, sub_mood = mood_entry.get_mood_type()
+    print(mood_entry)
+
+    tracker.add_entry(mood_entry)
+    tracker.save_to_file()
+
+    while True:
+        choice = input('Do you want to add another entry? (y/n): ').lower()
+        if choice in ['y', 'n']:
+            break
+        else:
+            messagebox.showerror('Invalid Input', "Please enter 'y' or 'n'.")
+
+    if choice != 'y':
+        break
+
+dates, mood_scores, water_intakes, exercise_times, sleep_times = tracker.get_chart_data()
+
+#maybe the libraries
+fig, ax1 = plt.subplots(figsize=(12, 6))
+
+ax1.plot(dates, mood_scores, marker='o', color='#F46A9B', label='Mood Score')
+ax1.set_xlabel('DATE', fontsize=12, fontweight='bold' )
+ax1.set_ylabel('Mood Score', color='#F46A9B', fontsize=12, fontweight='bold')
+ax1.tick_params(axis='y', labelcolor='#F46A9B')
+ax1.set_ylim(0, 8)
+
+ax2 = ax1.twinx()
+ax2.plot(dates, water_intakes, marker='s', color='#7EB0D5', label='Water Intake (L)')
+
+ax2.plot(dates, exercise_times, marker='^', color='#FFB55A', label='Exercise Time (min)')
+
+ax2.plot(dates, sleep_times, marker='D', color='#BD7EBE', label='Sleep Time (hrs)')
+
+ax2.set_ylabel('Water (L) / Exercise (min) / Sleep (hrs)', color='#B2E061', fontsize=12, fontweight='bold')
+ax2.tick_params(axis='y', labelcolor='#B2E061')
+
+ax1.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d"))
+ax1.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+plt.gcf().autofmt_xdate()
+
+lines1, labels1 = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+
+plt.title('Mood Tracker', fontsize=14, fontweight='bold')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
