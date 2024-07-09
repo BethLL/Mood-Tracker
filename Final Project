@@ -1,3 +1,21 @@
+from datetime import date
+import json
+from matplotlib.dates import DateFormatter
+import matplotlib.dates as mdates
+from tkinter import messagebox
+import matplotlib.pyplot as plt
+
+
+MOOD_NAMES = {
+    1: 'Happy',
+    2: 'Sad',
+    3: 'Surprised',
+    4: 'Bad',
+    5: 'Fearful',
+    6: 'Angry',
+    7: 'Disgusted'}
+
+
 class MoodEntry:
     def __init__(self, mood_score, date, sub_mood=None, water_intake=0, exercise_time=0, sleep_time=0):
         self.mood_score = mood_score
@@ -20,7 +38,7 @@ class MoodEntry:
             5: {'name': 'Fearful',
                 'sub_moods': ['Scared', 'Anxious', 'Insecure', 'Nervous', 'Weak', 'Rejected', 'Threatened']},
             6: {'name': 'Angry',
-                'sub_moods': ['Let Down', 'Humiliated', 'Bitter', 'Mad', 'Agressive', 'Frustrated', 'Distant',
+                'sub_moods': ['Let Down', 'Humiliated', 'Bitter', 'Mad', 'Aggressive', 'Frustrated', 'Distant',
                               'Critical', 'Annoyed', 'Rage']},
             7: {'name': 'Disgusted',
                 'sub_moods': ['Disapproving', 'Disappointed', 'Awful', 'Repelled', 'Judgmental', 'Embarrassed',
@@ -132,28 +150,37 @@ class MoodTracker:
 
     def save_to_file(self, filename='mood_entries.json'):
         with open(filename, 'w') as f:
-            json.dump([entry.to_dict() for entry in self.entries], f)
+            json.dump([entry.to_dict() for entry in self.entries], f, indent=4)
 
     def load_from_file(self, filename='mood_entries.json'):
         try:
             with open(filename, 'r') as f:
-                data = json.load(f)
-                self.entries = [MoodEntry.from_dict(entry) for entry in data]
+                content = f.read()
+                if content.strip():  # Check if the file is not empty
+                    data = json.loads(content)
+                    self.entries = [MoodEntry.from_dict(entry) for entry in data]
+                else:
+                    print('The file is empty. Starting with no entries.')
+                    self.entries = []
         except FileNotFoundError:
             print('')
+            self.entries = []
+        except json.JSONDecodeError:
+            print('Welcome to your emotion space')
+            self.entries = []
 
     def get_chart_data(self):
         dates = [entry.date for entry in self.entries]
-        mood_scores = [entry.mood_score for entry in self.entries]
+        mood_names_list = [MOOD_NAMES[entry.mood_score] for entry in self.entries]
         water_intakes = [entry.water_intake for entry in self.entries]
         exercise_times = [entry.exercise_time for entry in self.entries]
         sleep_times = [entry.sleep_time for entry in self.entries]
-        return dates, mood_scores, water_intakes, exercise_times, sleep_times
+        return dates, mood_names_list, water_intakes, exercise_times, sleep_times
+
 
 if __name__ == '__main__':
-    
-  tracker = MoodTracker()
-  tracker.load_from_file()
+    tracker = MoodTracker()
+    tracker.load_from_file()
 
 while True:
     today = date.today()
@@ -174,15 +201,19 @@ while True:
     if choice != 'y':
         break
 
-dates, mood_scores, water_intakes, exercise_times, sleep_times = tracker.get_chart_data()
+dates, mood_names_list, water_intakes, exercise_times, sleep_times = tracker.get_chart_data()
 
 fig, ax1 = plt.subplots(figsize=(14, 6))
 
-ax1.plot(dates, mood_scores, marker='o', color='#F46A9B', label='Mood')
-ax1.set_xlabel('DATE', fontsize=12, fontweight='bold' )
+ax1.plot(dates, mood_names_list, marker='o', color='#F46A9B', label='Mood')
+ax1.set_xlabel('DATE', fontsize=12, fontweight='bold')
 ax1.set_ylabel('Mood', color='#F46A9B', fontsize=12, fontweight='bold')
 ax1.tick_params(axis='y', labelcolor='#F46A9B')
 ax1.set_ylim(0, 8)
+
+unique_moods = list(set(mood_names_list))
+ax1.set_yticks(range(len(unique_moods)))
+ax1.set_yticklabels(unique_moods)
 
 ax2 = ax1.twinx()
 ax2.plot(dates, water_intakes, marker='s', color='#7EB0D5', label='Water Intake (L)')
