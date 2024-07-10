@@ -156,7 +156,7 @@ class MoodTracker:
         try:
             with open(filename, 'r') as f:
                 content = f.read()
-                if content.strip():  # Check if the file is not empty
+                if content.strip():  
                     data = json.loads(content)
                     self.entries = [MoodEntry.from_dict(entry) for entry in data]
                 else:
@@ -237,3 +237,4 @@ plt.title('Mood Tracker', fontsize=14, fontweight='bold')
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
